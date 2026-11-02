@@ -34,6 +34,7 @@ public class RagNaif {
                 .apiKey(llmKey)
                 .modelName("gemini-3.5-flash-lite")
                 .temperature(0.3)
+                .logRequestsAndResponses(true)
                 .build();
 
         // Phase 1 du RAG : enregistrement des embeddings
