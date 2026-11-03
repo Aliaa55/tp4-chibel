@@ -19,7 +19,7 @@ import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.rag.content.retriever.WebSearchContentRetriever;
-import dev.langchain4j.rag.query.router.DefaultQueryRouter;
+import dev.langchain4j.rag.query.router.LanguageModelQueryRouter;
 import dev.langchain4j.rag.query.router.QueryRouter;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.store.embedding.EmbeddingStore;
@@ -27,7 +27,9 @@ import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import dev.langchain4j.web.search.WebSearchEngine;
 import dev.langchain4j.web.search.tavily.TavilyWebSearchEngine;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 /**
@@ -79,8 +81,20 @@ public class Test4 {
                 .webSearchEngine(webSearchEngine)
                 .build();
 
-        // Les 2 ContentRetrievers sont utilisés : informations du fichier PDF et du Web
-        QueryRouter queryRouter = new DefaultQueryRouter(contentRetriever, webContentRetriever);
+        // Code de départ mis en commentaire (exercice bonus) : avec DefaultQueryRouter, les 2 ContentRetrievers
+        // sont toujours utilisés, et des extraits du fichier PDF sont ajoutés même pour une question
+        // qui n'a rien à voir avec le fichier PDF (par exemple sur un événement récent).
+//        // Les 2 ContentRetrievers sont utilisés : informations du fichier PDF et du Web
+//        QueryRouter queryRouter = new DefaultQueryRouter(contentRetriever, webContentRetriever);
+
+        // Le LM choisit la source à utiliser, comme dans le test sur le routage :
+        // le fichier PDF n'est pas utilisé si la question n'est pas liée à son contenu.
+        Map<ContentRetriever, String> descriptions = new HashMap<>();
+        descriptions.put(contentRetriever,
+                "Support de cours sur l'IA : le fine-tuning et le RAG (Retrieval Augmented Generation) des modèles de langage");
+        descriptions.put(webContentRetriever,
+                "Recherche sur le Web : événements récents, actualités et informations qui ne sont pas dans le support de cours");
+        QueryRouter queryRouter = new LanguageModelQueryRouter(model, descriptions);
 
         RetrievalAugmentor retrievalAugmentor = DefaultRetrievalAugmentor.builder()
                 .queryRouter(queryRouter)
